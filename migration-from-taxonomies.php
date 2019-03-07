@@ -16,22 +16,32 @@ if ( ! defined( 'ABSPATH' ) ) {
 if ( ! class_exists( 'FD_Migration' ) ) {
 	class FD_Migration {
 		public function __construct() {
-
-			if( function_exists('acf_add_options_page') ) {
-				acf_add_options_page(array(
-					'page_title' 	=> 'FD Migration',
-					'menu_title' 	=> 'FD Migration',
-					'menu_slug' 	=> 'fd-migration',
-					'capability' 	=> 'edit_posts',
-					'redirect' 	=> false
-				));
-			}
-//			add_action( '', array( $this, '' ) );
+			add_action( 'admin_menu', array( $this, 'fd_admin_menu' ) );
+			add_action( 'init', array( $this, 'fd_change_cat_object' ) );
 //			add_action( '', array( $this, '' ) );
 //			add_action( '', array( $this, '' ) );
 		}
 
+		public function fd_admin_menu() {
+			add_menu_page( 'FD Migration', 'FD Migration', 'publish_pages', 'fd-migration', array(
+				$this,
+				'fd_run_migration'
+			), plugin_dir_url( __FILE__ ) . 'assets/images/folder.png', 2 );
 
+		}
+
+		function fd_run_migration() {
+			require_once 'view/dashboard.php';
+		}
+
+		function fd_change_cat_object(){
+			global $wp_taxonomies;
+			$category = &$wp_taxonomies['category'];
+			$category->rewrite = false;
+			$category->public = false;
+			$category->publicly_queryable = false;
+
+		}
 	}
 }
 new FD_Migration();
