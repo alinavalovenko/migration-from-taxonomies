@@ -18,7 +18,7 @@ if ( ! class_exists( 'FD_Migration' ) ) {
 		public function __construct() {
 			add_action( 'admin_menu', array( $this, 'fd_admin_menu' ) );
 			add_action( 'init', array( $this, 'fd_change_cat_object' ) );
-//			add_action( '', array( $this, '' ) );
+			add_action( 'wp_ajax_fd_single_migrate', array( $this, 'fd_single_migrate_callback' ) );
 //			add_action( '', array( $this, '' ) );
 		}
 
@@ -30,17 +30,44 @@ if ( ! class_exists( 'FD_Migration' ) ) {
 
 		}
 
+		function scripts_enqueue(){
+			wp_enqueue_script( 'jquery', 'https://code.jquery.com/jquery-3.3.1.min.js', '', '1.0.0', true );
+			wp_enqueue_script( 'fd-scripts', plugin_dir_url(__FILE__) . 'assets/scripts.js', array( 'jquery' ), '1.0.0', true );
+		}
+
 		function fd_run_migration() {
+			$this->scripts_enqueue();
+			$terms = $this->fd_get_all_terms();
 			require_once 'view/dashboard.php';
 		}
 
-		function fd_change_cat_object(){
+		function fd_change_cat_object() {
 			global $wp_taxonomies;
-			$category = &$wp_taxonomies['category'];
-			$category->rewrite = false;
-			$category->public = false;
+			$category                     = &$wp_taxonomies['category'];
+			$category->rewrite            = false;
+			$category->public             = false;
 			$category->publicly_queryable = false;
 
+		}
+
+		function fd_get_all_terms($taxonomy = 'category') {
+			$terms    = get_terms( $taxonomy, array( 'hide_empty' => false ) );
+			return $terms;
+		}
+
+		function fd_get_term_meta($term_id){
+			global $wpdb;
+			$sql = $wpdb->prepare("SELECT $wpdb->termmeta WHERE `term_id` = %s", $term_id);
+			$meta_data = $wpdb->get_results($sql, ARRAY_A);
+
+			return $meta_data;
+		}
+
+		function fd_single_migrate_callback(){
+			$term_id = $_POST['term_id'];
+
+			echo $term_id;
+			wp_die();
 		}
 	}
 }
