@@ -8,7 +8,7 @@ jQuery(document).ready(function ($) {
         };
 
         $.post(ajaxurl, data, function (response) {
-            console.log(response);
+            alert(response);
         });
     });
 });

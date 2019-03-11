@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) {
 	exit;
 }
 if ( ! class_exists( 'FD_Migration' ) ) {
+	require_once 'include/class-single-migration.php';
+	require_once 'include/acf-fields.php';
 	class FD_Migration {
 		public function __construct() {
 			add_action( 'admin_menu', array( $this, 'fd_admin_menu' ) );
@@ -55,18 +57,10 @@ if ( ! class_exists( 'FD_Migration' ) ) {
 			return $terms;
 		}
 
-		function fd_get_term_meta($term_id){
-			global $wpdb;
-			$sql = $wpdb->prepare("SELECT $wpdb->termmeta WHERE `term_id` = %s", $term_id);
-			$meta_data = $wpdb->get_results($sql, ARRAY_A);
-
-			return $meta_data;
-		}
-
 		function fd_single_migrate_callback(){
 			$term_id = $_POST['term_id'];
-
-			echo $term_id;
+			$response = new Single_Migration($term_id);
+			echo $response->status;
 			wp_die();
 		}
 	}
