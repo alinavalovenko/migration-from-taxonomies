@@ -62,6 +62,7 @@ if ( ! class_exists( 'Single_Migration' ) ) {
 			foreach ( $meta as $id => $metadata ) {
 				update_post_meta( $page, $metadata['meta_key'], $metadata['meta_value'] );
 			}
+			update_field('fd-category', $this->term_id, $page);
 		}
 	}
 }
