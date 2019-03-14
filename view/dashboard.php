@@ -12,7 +12,12 @@
                 <tr>
                     <td><?php echo $term->term_id; ?></td>
                     <td><?php echo $term->name; ?></td>
-                    <td><button class="fd-run-migrate" data-term="<?php echo $term->term_id; ?>">Migrate Data</button></td>
+                    <td>
+                        <button class="fd-run-migrate"
+                                data-term="<?php echo $term->term_id; ?>" <?php echo strpos( $term->slug, '-old' ) ? 'disabled' : ''; ?> >
+                            Migrate Data
+                        </button>
+                    </td>
                 </tr>
 			<?php endforeach; ?>
         </table>

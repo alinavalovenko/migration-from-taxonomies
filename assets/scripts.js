@@ -6,9 +6,10 @@ jQuery(document).ready(function ($) {
             action: 'fd_single_migrate',
             term_id: $(this).attr('data-term')
         };
-
+        var bnt =  $(this);
         $.post(ajaxurl, data, function (response) {
             alert(response);
+            bnt.attr("disabled", true);
         });
     });
 });
