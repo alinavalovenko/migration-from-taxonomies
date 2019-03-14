@@ -46,10 +46,8 @@ if ( ! class_exists( 'FD_Migration' ) ) {
 		function fd_change_cat_object() {
 			global $wp_taxonomies;
 			$category                     = &$wp_taxonomies['category'];
-			$category->rewrite            = false;
 			$category->public             = false;
 			$category->publicly_queryable = false;
-
 		}
 
 		function fd_get_all_terms($taxonomy = 'category') {
@@ -59,7 +57,12 @@ if ( ! class_exists( 'FD_Migration' ) ) {
 
 		function fd_single_migrate_callback(){
 			$term_id = $_POST['term_id'];
+			$term = get_term_by('id', $term_id, 'category');
+			if(!empty($term->parent)) {
+				$parrent = new Single_Migration( $term->parent );
+			}
 			$response = new Single_Migration($term_id);
+			flush_rewrite_rules();
 			echo $response->status;
 			wp_die();
 		}

@@ -13,11 +13,16 @@ if ( ! class_exists( 'Single_Migration' ) ) {
 		}
 
 		function get_status() {
-			$page   = $this->fd_create_new_page();
-			$meta   = $this->fd_get_term_meta();
-			$this->update_page_meta( $page, $meta );
+			$term = get_term( $this->term_id );
+			if ( ! strpos( $term->slug, '-old' ) ) {
+				$page_id = $this->fd_create_new_page();
+				$meta    = $this->fd_get_term_meta();
+				$this->update_page_meta( $page_id, $meta );
 
-			return 'Complete';
+				return 'Complete';
+			}
+
+			return 'Migration was done for this page';
 		}
 
 		function fd_get_term_meta( $term_id = null ) {
@@ -33,7 +38,8 @@ if ( ! class_exists( 'Single_Migration' ) ) {
 
 		function fd_create_new_page() {
 			global $current_user;
-			$term      = get_term_by( 'id', $this->term_id, $this->taxonomy );
+			$term = get_term_by( 'id', $this->term_id, $this->taxonomy );
+
 			$page      = get_page_by_path( $term->slug );
 			$post_data = array(
 				'post_title'    => $term->name,
@@ -42,7 +48,9 @@ if ( ! class_exists( 'Single_Migration' ) ) {
 				'post_status'   => 'publish',
 				'post_type'     => 'page',
 				'post_author'   => $current_user->ID,
-				'page_template' => 'page-fd-category.php'
+				'page_template' => $this->define_page_template( $term ),
+				'post_category' => $this->term_id,
+				'post_parent'   => $this->get_parrent_page_id( $term->parent )
 			);
 			if ( $page ) {
 				$post_data['ID'] = $page->ID;
@@ -54,15 +62,44 @@ if ( ! class_exists( 'Single_Migration' ) ) {
 			if ( is_wp_error( $page_id ) ) {
 				die( 'Unable to insert new page' );
 			}
+			wp_update_term( $this->term_id, 'category', array(
+				'slug' => $term->slug . '-old'
+			) );
 
 			return $page_id;
 		}
 
-		function update_page_meta( $page, $meta ) {
+		function update_page_meta( $page_id, $meta ) {
 			foreach ( $meta as $id => $metadata ) {
-				update_post_meta( $page, $metadata['meta_key'], $metadata['meta_value'] );
+				update_post_meta( $page_id, $metadata['meta_key'], $metadata['meta_value'] );
 			}
-			update_field('fd-category', $this->term_id, $page);
+			update_post_meta( $page_id, 'fd-category', $this->term_id );
+		}
+
+		function define_page_template( $term ) {
+			if ( ! empty( $term->parrent ) ) {
+				return 'page-fd-sub-category.php';
+			}
+
+			return 'page-fd-category.php';
+		}
+
+		function get_parrent_page_id( $parent_term_id ) {
+			if($parent_term_id) {
+				$parent_term = get_term( $parent_term_id );
+				$slug        = $parent_term->slug;
+				$pos         = strpos( $parent_term->slug, '-old' );
+				if ( $pos ) {
+					$slug = substr( $parent_term->slug, 0, $pos );
+				}
+				$page = get_page_by_path( $slug, OBJECT, 'page' );
+				if ( is_wp_error( $page ) ) {
+					die( "Parent Page doesn't exist, please create a page for " . $parent_term->name );
+				}
+
+				return $page->ID;
+			} else
+				return null;
 		}
 	}
 }
